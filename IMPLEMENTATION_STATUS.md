@@ -1,7 +1,7 @@
 # Implementation Status - DEV-LYNXEO-DATAPLATFORM-MBS
 
 > Comparaison entre le workspace de référence (DEV-LYNXEO-DATAPLATFORM) et le workspace MBS.
-> Objectif : implémenter les pipelines pour 3 nouvelles sources (Azure Consumption, EntraID Account, Tanium Workstation).
+> Objectif : implémenter les pipelines pour 2 sources (API endpoint, ).
 
 ---
 
