@@ -1,4 +1,9 @@
 from pydantic import BaseModel
+from enum import Enum
+
+class Roles(Enum):
+    afc = 'producer'
+    databricks = 'consumer'
 
 class CampaignData(BaseModel):
     username: str
@@ -8,4 +13,9 @@ class CampaignData(BaseModel):
 
 class Credentials(BaseModel):
     email: str
-    password : int
+    password: int
+
+class User(BaseModel):
+    email: str
+    password: int
+    role: Roles
