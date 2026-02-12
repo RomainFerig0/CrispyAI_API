@@ -7,7 +7,11 @@ from pymongo import MongoClient
 
 load_dotenv()
 
-client = MongoClient("mongodb://mongo:27017")
+if os.getenv("MODE") == "container":
+    client = MongoClient("mongodb://mongo:27017") # Creating connection with MongoDB database
+else:
+    client = MongoClient("mongodb://localhost:27017")
+
 collection = client.raw.events
 campaign_db = collection["campaign_db"]
 log_db = collection["logs_db"]
