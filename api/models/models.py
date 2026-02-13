@@ -2,7 +2,9 @@ from pydantic import BaseModel, RootModel
 from typing import Union, List
 from enum import Enum
 
-'''class Roles(Enum):
+'''
+:: DEPRECATED MODELS FOR SIGNUP ENDPOINT
+class Roles(Enum):
     producer = 'producer'
     consumer = 'consumer'
 

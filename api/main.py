@@ -1,14 +1,26 @@
+"""
+Main file of the program
+Defines all API endpoints and associated operations/functions
+"""
+
 import os
 import datetime
 from typing import Annotated
 from fastapi import FastAPI, HTTPException, Header
 from dotenv import load_dotenv
 from utils.utils import create_token, decode_token, auth_user
-from utils.models import Credentials, FeedbackRequest, FeedbackRequest
-from databricks.sdk import WorkspaceClient
+from models.models import Credentials, FeedbackRequest, FeedbackRequest
 from pymongo import MongoClient
+import pymongo
+import dateutil.parser
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 load_dotenv() # Loading environmental variables
+if os.getenv("MODE") not in ["local", "container"]:
+    raise ValueError("Illegal execution parameter")
+
 app = FastAPI() # Creating FastAPI session
 
 if os.getenv("MODE") == "container":
@@ -18,48 +30,33 @@ else:
 
 collection = client.raw.events # Creating MongoDB collections
 campaign_db = collection["campaign_db"]
-log_db = collection["logs_db"]
+log_db = collection["log_db"]
 user_db = collection["user_db"]
 
 dblist = client.raw.list_collection_names()
 
-email = []
-password = []
-
 if "events.user_db" not in dblist:
 
-    '''master_data = { # Initializing master user
-        "_id": os.getenv("API_EMAIL"),
-        "password": int(os.getenv("API_PASSWORD")),
-        "role": "master"
-    }'''
+    predefined_users = [
+    {"_id" : os.getenv("API_EMAIL"), "password": pwd_context.hash(os.getenv("API_PASSWORD")), "role":"master"},
+    {"_id" : os.getenv("API_CONS_EMAIL"), "password":pwd_context.hash(os.getenv("API_CONS_PASSWORD")), "role":"consumer"},
+    {"_id" : os.getenv("API_PROD_EMAIL"), "password":pwd_context.hash(os.getenv("API_PROD_PASSWORD")), "role":"producer"}
+    ]
 
-    user_db.insert_one({"_id" : os.getenv("API_EMAIL"), "password" : os.getenv("API_PASSWORD"), "role":"master"})
-    user_db.insert_one({"_id" : os.getenv("API_CONS_EMAIL"), "password" : os.getenv("API_CONS_PASSWORD"), "role":"consumer"})
-    user_db.insert_one({"_id" : os.getenv("API_PROD_EMAIL"), "password" : os.getenv("API_PROD_PASSWORD"), "role":"producer"})
+    user_db.insert_many(predefined_users)
 
 @app.get("/", status_code=200) # Health check
 async def get_health():
     return {"message":"The API endpoint is up."}
 
-@app.post("/afc/login_prod", status_code=201) # Endpoint for logging in as a producer
-async def post_credentials(credentials: Credentials):
-    
-    try:
-        role = auth_user(credentials.email, credentials.password, "producer")
-    except Exception:
-        raise HTTPException(401, {"message":"Login failed."})
-    token = create_token(credentials.email, role)
-    return {"access_token": token}
-
-@app.post("/afc/login/{role}", status_code=201) # Endpoint for logging in as a consumer
+@app.post("/afc/login/{role}", status_code=201) # Authenticates a user and grants a JWT
 async def post_credentials(role: str, credentials: Credentials):
     
     try:
-        role = auth_user(credentials.email, credentials.password, role)
+        role_user = auth_user(credentials.email, credentials.password, role)
     except Exception:
-        raise HTTPException(401, {"message":"Login failed."})
-    token = create_token(credentials.email, role)
+        raise HTTPException(401, {"message":"Login failed, access unauthorized."})
+    token = create_token(credentials.email, role_user)
     return {"access_token": token}
 
 @app.post("/afc/api", status_code=201)
@@ -68,7 +65,7 @@ async def post_feedback(feedback: FeedbackRequest, Authorization: Annotated[str 
     try:
         decoded = decode_token(Authorization, "producer")
     except Exception:
-
+    
         log_data = {
             "user_email" : decoded.get("sub"),
             "user_role" : decoded.get("roe"),
@@ -80,7 +77,7 @@ async def post_feedback(feedback: FeedbackRequest, Authorization: Annotated[str 
 
         log_db.insert_one(log_data)
 
-        return {"message":"Token rejected, either expired, invalid, or not containing the correct role."}
+        raise HTTPException(401, {"message":"Token rejected, either expired, invalid, or not containing the correct role."})
     
     feedbacks = feedback.root if isinstance(feedback.root, list) else [feedback.root]    # Handle both single object and list
     created_feedbacks = []
@@ -126,7 +123,7 @@ async def get_feedback(Authorization: Annotated[str | None, Header()] = None):
         return {"message":"Token rejected, either expired or invalid."}
 
     feedbacks = []
-    query_data = campaign_db.find()
+    query_data = campaign_db.find().sort(("creation_time"))
 
     for feedback_data in query_data:
         feedback_data.pop('_id', None) 
@@ -135,7 +132,7 @@ async def get_feedback(Authorization: Annotated[str | None, Header()] = None):
     return{"message" : feedbacks}
 
 @app.get("/afc/api/{watermark}", status_code=200) # Endpoint for getting all feedback data
-async def get_feedback(watermark : datetime, Authorization: Annotated[str | None, Header()] = None):
+async def get_feedback(watermark : str, Authorization: Annotated[str | None, Header()] = None):
 
     try:
         decode_token(Authorization, "consumer")
@@ -143,10 +140,10 @@ async def get_feedback(watermark : datetime, Authorization: Annotated[str | None
         return {"message":"Token rejected, either expired or invalid."}
 
     feedbacks = []
-    query_data = campaign_db.find({"creation_time":{"$gt":watermark}})
+    query_data = campaign_db.find({"creation_time":{"$gt":dateutil.parser.parse(watermark)}})
 
     for feedback_data in query_data:
-        feedback_data.pop('_id', None) 
+        feedback_data.pop('_id', None)
         feedbacks.append(feedback_data)
 
     return{"message" : feedbacks}
@@ -159,7 +156,7 @@ async def get_logs(Authorization: Annotated[str | None, Header()] = None):
     except Exception:
         return {"message":"Token rejected, either expired, invalid, or not containing the correct role."}
 
-    logs = list(log_db.find().sort(("creation_time", pymongo.DESCENDING)))
+    logs = list(log_db.find().sort(("creation_time")))
 
     for log in logs:
         log["_id"] = str(log["_id"])
