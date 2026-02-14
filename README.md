@@ -1,6 +1,22 @@
-# CrispyAI
+# Feedback Ingestion API
 
-## LAUNCH THE API
+This repository contains three codebases :
+
+- The code for setting up the AFC API, for ingesting and 
+- The code for simulating traffic to the AFC API
+- The notebook directory containing 
+## Ports
+
+The CrispyAI API uses  port 80 locally. The containerized version uses port 8080.
+The MongoDB database uses port 27017.
+Ngrok uses port 4040.
+## Setup (Local execution)
+
+These instructions are for running the API on a local computer without connecting to the internet.
+
+## Setup (Containerized)
+
+These instructions are for running the API on a container along with a MongoDB and a Ngrok container for exposing the API to the internet.
 
 ### EXECUTE LOCALLY
 ```

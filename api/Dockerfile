@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir -r ./requirements.txt
 # Copy the API code
 COPY main.py .
 COPY utils/ ./utils/
+COPY models/ ./models/
 
 # Initialize environmental variables
 ENV API_SECRET=A

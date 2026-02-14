@@ -25,4 +25,4 @@ class FeedbackRequest(RootModel[Union[CampaignData, List[CampaignData]]]):
 
 class Credentials(BaseModel):
     email: str
-    password: int
+    password: str

@@ -5,9 +5,8 @@ User authentication function
 """
 
 from datetime import datetime, timedelta
-from fastapi import HTTPException
 import os
-from dotenv import load_dotenv, dotenv_values
+from dotenv import load_dotenv
 import jwt
 from pymongo import MongoClient
 from passlib.context import CryptContext
@@ -29,7 +28,7 @@ user_db = collection["user_db"]
 
 SECRET_KEY = os.getenv("API_SECRET")
 
-def create_token(email, role): # Generates a JWT token
+def create_token(email, role): # Generates a JWT token conaining the identifier and role of the user
     payload = {
         "sub": email,
         "roe": role, 
@@ -38,7 +37,7 @@ def create_token(email, role): # Generates a JWT token
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
-def decode_token(token, role): # Decodes a JWT token
+def decode_token(token, role): # Decodes a JWT token and assesses its validity
     try:  
         decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         if decoded.get("roe") not in [role, 'master']:
@@ -48,12 +47,14 @@ def decode_token(token, role): # Decodes a JWT token
         raise Exception("Token expired")
     except jwt.InvalidTokenError:
         raise Exception("Invalid token")
+    except ValueError:
+        raise Exception("Malformed token")
 
-def auth_user(email, password, role): # Verifies if a user exist 
+def auth_user(email, password, role): # Verifies if a user exist and has the correct role
 
     query_data = user_db.find_one({"_id":email}, {"password":1, "role":1})
 
-    if not query_data or not pwd_context.verify(str(password), query_data["password"]):
+    if not query_data or not pwd_context.verify(password, query_data["password"]):
         raise Exception("Incorrect credentials.")
     elif (query_data['role'] not in [role, 'master']):
         raise Exception("You do not have the rights to access this endpoint.")
