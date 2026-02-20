@@ -41,9 +41,9 @@ dblist = client.raw.list_collection_names()
 if "events.user_db" not in dblist: # Inserting 3 primary roles in the database. WARNING :
 
     predefined_users = [
-    {"_id" : os.getenv("API_EMAIL"), "password": pwd_context.hash(os.getenv("API_PASSWORD")), "role":"master"}, # "master" role can use any endpoint.
-    {"_id" : os.getenv("API_CONS_EMAIL"), "password":pwd_context.hash(os.getenv("API_CONS_PASSWORD")), "role":"consumer"}, # "consumer" role can only use "get" operations on endpoints.
-    {"_id" : os.getenv("API_PROD_EMAIL"), "password":pwd_context.hash(os.getenv("API_PROD_PASSWORD")), "role":"producer"} # "producer" role can only use "post" operations on endpoints.
+    {"_id" : os.getenv("API_EMAIL"), "password": pwd_context.hash(str(os.getenv("API_PASSWORD"))), "role":"master"}, # "master" role can use any endpoint.
+    {"_id" : os.getenv("API_CONS_EMAIL"), "password":pwd_context.hash(str(os.getenv("API_CONS_PASSWORD"))), "role":"consumer"}, # "consumer" role can only use "get" operations on endpoints.
+    {"_id" : os.getenv("API_PROD_EMAIL"), "password":pwd_context.hash(str(os.getenv("API_PROD_PASSWORD"))), "role":"producer"} # "producer" role can only use "post" operations on endpoints.
     ]
 
     user_db.insert_many(predefined_users)

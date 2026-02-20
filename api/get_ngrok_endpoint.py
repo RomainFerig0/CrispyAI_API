@@ -5,8 +5,8 @@ Fetches random ngrok URL
 
 import os
 from dotenv import load_dotenv
-import time
 import requests
+import urllib3.exceptions
 
 load_dotenv() # Loading environmental variables
 
@@ -29,11 +29,14 @@ if api_mode == "container":
 
             print (message)
         else :
-            print("Cannot reach Ngrok:", r.status_code)
+            raise ConnectionError("Error:", r.status_code, ", cannot reach Ngrok.")
 
-
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error occurred: {e}")
+    except urllib3.exceptions.NewConnectionError as e:
+        print(f"The server isn't running on this machine: {e}")
     except Exception as e:
-        print("Error: ", e.args) 
+        print(f"An error occurred: {e}")
 
 else:
     print("Ngrok isn't running.")
