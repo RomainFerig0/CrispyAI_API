@@ -142,3 +142,6 @@ API_EMAIL= ABCD # Master email
 API_PASSWORD= 1234 # Master password
 API_SECRET=
 
+#MODE=local
+MODE=container
+
