@@ -42,8 +42,23 @@ There are three roles required for this API to function:
 ### Data format
 
 Strict data models are enforced at each endpoint for 'POST' requests. Not respecting these formats will lead to an error on the user side:
-#### Login
-#### API
+#### Credentials
+
+    email: str
+
+    password: str
+
+#### Feedback
+
+    username: str
+
+    feedback_date: str
+
+    campaign_id: str
+
+    comment: str
+
+Feedbacks can be passed as an array of, or a single JSON object(s).
 
 ## Setup
 
@@ -110,7 +125,9 @@ After this, your application should be running on port 80, allowing for HTTP req
 
 These instructions are for running the API on a container along with a MongoDB and a Ngrok container for exposing the API to the internet. Requests to the API can be made from the Ngrok endpoint or Localhost.
 ### Set .env MODE to 'container'
-
+```
+MODE=container
+```
 ### Run the application
 
 Run docker-compose from the root folder:
@@ -130,15 +147,4 @@ python get_ngrok_endpoint.py
 
 This will print the Ngrok endpoint for the currently running API.
 
-## Simulate traffic
-### Configuration
-```ini
-[API]
-endpoint_url = http://localhost:8080/afc/api
-endpoint_url_authentication = http://localhost:8080/afc/signup
-
-[API_AUTH (MASTER)]
-API_EMAIL= ABCD # Master email
-API_PASSWORD= 1234 # Master password
-API_SECRET=
 

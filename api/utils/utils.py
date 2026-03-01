@@ -40,7 +40,7 @@ def create_token(email, role): # Generates a JWT token conaining the identifier 
 def decode_token(token, role): # Decodes a JWT token and assesses its validity
     try:  
         decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        if decoded.get("roe") not in [role, 'master']:
+        if decoded.get("roe") not in [role, 'master']:  # Compares JWT-embedded role with required authorization
              raise Exception("Invalid role")
         return decoded
     except jwt.ExpiredSignatureError:
