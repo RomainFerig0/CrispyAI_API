@@ -131,17 +131,14 @@ python get_ngrok_endpoint.py
 This will print the Ngrok endpoint for the currently running API.
 
 ## Simulate traffic
+Traffic simulation is done through the api_pusher at the following Git repository: https://github.com/Prjprj/api_pusher
+
 ### Configuration
 ```ini
 [API]
-endpoint_url = http://localhost:8080/afc/api
-endpoint_url_authentication = http://localhost:8080/afc/signup
+endpoint_url = http://random-ngrok-url.app
 
-[API_AUTH (MASTER)]
-API_EMAIL= ABCD # Master email
-API_PASSWORD= 1234 # Master password
-API_SECRET=
-
-#MODE=local
-MODE=container
-
+[API_AUTH]
+active = True
+username = enteryourproducerusername
+password = enteryourproducerpassword
