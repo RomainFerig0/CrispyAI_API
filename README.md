@@ -72,7 +72,7 @@ pip install -r requirements.txt
 
 ### Set environmental variables
 
-Create a .env file in `./api/` . There, you should define the master, consumer and producer credentials along with a secret using the following variables:
+Create a .env file in `.` the root folder . There, you should define the master, consumer and producer credentials along with a secret using the following variables:
 
 ```
 API_PASSWORD
